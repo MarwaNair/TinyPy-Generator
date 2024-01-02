@@ -14,12 +14,12 @@ To use the code generator with different configurations, you can specify command
 
 1. **num_programs**: Number of programs to generate and write (default is 10000).
 2. **level**: The level of the programs. Choose from:
-   - "1.1" for Simple arithmetic with a maximum of 3 variables.
-   - "1.2" for Advanced arithmetic with a maximum of 5 variables and enclosed expressions.
-   - "2.1" for Simple If-elif-else statements with a maximum of 2 variable conditions.
-   - "2.2" for Advanced If-elif-else statements with advanced arithmetic expressions and a maximum of 5 variables.
-   - "3.1" for Simple for loops with a maximum of 3 variables.
-   - "3.2" for Advanced for loops with a maximum of 5 variables and expressions everywhere.
+   - "1.1" for Simple arithmetic.
+   - "1.2" for Advanced arithmetic with enclosed expressions.
+   - "2.1" for Simple If-elif-else statements.
+   - "2.2" for Advanced If-elif-else statements with advanced arithmetic expressions.
+   - "3.1" for Simple for loops.
+   - "3.2" for Advanced for loops with advanced arithmetic expressions.
 
 3. **filename**: Name of the file to write the programs (default is 'data.txt').
 

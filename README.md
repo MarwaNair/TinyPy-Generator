@@ -14,19 +14,17 @@ To use the code generator with different configurations, you can specify command
    - "3.1" for Simple for loops.
    - "3.2" for Advanced for loops with advanced arithmetic expressions.
 
-3. **filename**: Name of the file to write the programs (default is 'data.txt').
+3. **filename**: Name of the file to write the programs (default is 'data/data.txt').
 
-4. **deduplicate**: Perform deduplication of generated programs. If specified, only unique programs will be written to the file (default is True).
+4. **deduplicate**: Perform deduplication of generated programs. If specified, the output file will contain unique programs (default is True).
 
 ### Example Usage
 
-Generate 5000 programs of level "3.1" and save them to a file named "output.txt" without deduplication:
+Generate 5000 programs of level "3.1" and save them to a file named "output.txt" with deduplication:
 
 ```bash
 python3 code_generator.py --num_programs 5000 --level "3.1" --filename "output.txt" --deduplicate
 ```
-
-Feel free to experiment with different values for `num_programs`, `level`, `filename`, and `deduplicate` to suit your requirements.
 
 
 Feel free to modify and expand this template based on your specific requirements.

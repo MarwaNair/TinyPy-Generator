@@ -23,7 +23,7 @@ To use the code generator with different configurations, you can specify command
 Generate 5000 programs of level "3.1" and save them to a file named "output.txt" without deduplication:
 
 ```bash
-python your_script.py --num_programs 5000 --level "3.1" --filename "output.txt" --deduplicate False
+python3 code_generator.py --num_programs 5000 --level "3.1" --filename "output.txt" --deduplicate
 ```
 
 Feel free to experiment with different values for `num_programs`, `level`, `filename`, and `deduplicate` to suit your requirements.

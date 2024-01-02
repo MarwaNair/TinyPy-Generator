@@ -32,7 +32,4 @@ python your_script.py --num_programs 5000 --level "3.1" --filename "output.txt"
 ```
 
 Feel free to experiment with different values for `num_programs`, `level`, and `filename` to suit your requirements.
-
-```
-
 Feel free to modify and expand this template based on your specific requirements or additional information you want to provide.

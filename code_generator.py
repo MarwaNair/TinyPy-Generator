@@ -6,16 +6,122 @@ import argparse
 import time
 
 class CodeGenerator:
-    def __init__(self, cfg_rules):
+    def __init__(self):
         """
         Initialize the CodeGenerator object with the given context-free grammar rules.
 
-        Parameters:
-        - cfg_rules (dict): Dictionary containing context-free grammar rules.
         """
-        self.cfg_rules = cfg_rules
+                
+        
         self.init_count = 0
         self.max_init = 0
+        
+        # Dictionary containing context-free grammar rules.
+        self.cfg_rules = {
+                # Variables and digits
+                "VARIABLE": ["a", "b", "c", "d", "e",
+#                                          "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+                            ],
+                "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+
+                # Operators
+                "ARITHMETIC_OPERATOR": ["+", "-", "*", "/"],
+                "RELATIONAL_OPERATOR": ["<", ">", "<=", ">=", "!=", "=="],
+                "LOGICAL_OPERATOR_INFIX": ["and", "or"],
+                "LOGICAL_OPERATOR_PREFIX": ["not"],
+                "LOGICAL_OPERATOR": ["LOGICAL_OPERATOR_INFIX", "LOGICAL_OPERATOR_PREFIX"],
+                "OPERATOR": ["ARITHMETIC_OPERATOR"], 
+
+                # Formatting
+                "NEW_LINE": ["\n"],
+                "TAB_INDENT": ["\t"],
+                "BRACKET_OPEN": ['('],
+                "BRACKET_CLOSE": [')'],
+                "EQUALS": ["="],
+                "COLON": [":"],
+                "COMMA": [","],
+
+
+                # Keywords
+                "IF": ["if"],
+                "ELIF": ["elif"],
+                "ELSE": ["else"],
+                "FOR": ["for"],
+                "IN": ["in"],
+                "RANGE": ["range"],
+                "WHILE": ["while"],
+                "PRINT": ["print"],
+
+                # Terms and expressions
+                "TERM": ["EXPRESSION_IDENTIFIER", "DIGIT"],
+                "EXPRESSION": ["TERM SPACE OPERATOR SPACE TERM"],
+                "ENCLOSED_EXPRESSION": ["BRACKET_OPEN EXPRESSION BRACKET_CLOSE"],
+                "DISPLAY_EXPRESSION": ["EXPRESSION_IDENTIFIER SPACE OPERATOR SPACE EXPRESSION_IDENTIFIER" ,
+                                        "EXPRESSION_IDENTIFIER SPACE OPERATOR SPACE DIGIT"],
+
+                # Initializations and assignments
+                "IDENTIFIER_INITIALIZATION": ["IDENTIFIER_INITIALIZATION INITIALIZATION", 
+                                              "INITIALIZATION"],
+
+                "INITIALIZATION": ["VARIABLE SPACE EQUALS SPACE DIGIT NEW_LINE"],
+
+                "SIMPLE_ASSIGNMENTS": ["VARIABLE SPACE EQUALS SPACE EXPRESSION NEW_LINE" , ""],
+                "ADVANCED_ASSIGNMENTS": ["VARIABLE SPACE EQUALS SPACE SIMPLE_ARITHMETIC_EVALUATION NEW_LINE", 
+                                         "VARIABLE SPACE EQUALS SPACE EXPRESSION NEW_LINE" , 
+                                         ""],
+
+                "SIMPLE_ARITHMETIC_EVALUATION": ["SIMPLE_ARITHMETIC_EVALUATION ARITHMETIC_OPERATOR ENCLOSED_EXPRESSION", 
+                                                 "ENCLOSED_EXPRESSION",
+                                                ], 
+
+                # Conditions
+                "SIMPLE_IF_STATEMENT": ["IF SPACE CONDITION SPACE COLON NEW_LINE"],
+                "ADVANCED_IF_STATEMENT": ["IF SPACE CHAIN_CONDITION SPACE COLON NEW_LINE"],
+                "SIMPLE_ELIF_STATEMENT": ["ELIF SPACE CONDITION SPACE COLON NEW_LINE"],
+                "ADVANCED_ELIF_STATEMENT": ["ELIF SPACE CHAIN_CONDITION SPACE COLON NEW_LINE"],
+                "ELSE_STATEMENT": ["ELSE SPACE COLON NEW_LINE"],
+
+                "CHAIN_CONDITION": ["CHAIN_CONDITION SPACE LOGICAL_OPERATOR_INFIX SPACE ENCLOSED_CONDITION", 
+                                    "LOGICAL_OPERATOR_PREFIX SPACE ENCLOSED_CONDITION", 
+                                    "ENCLOSED_CONDITION"],
+                "ENCLOSED_CONDITION": ["BRACKET_OPEN CONDITION BRACKET_CLOSE"],
+                "CONDITION": ["OPTIONAL_NOT CONDITION_EXPRESSION", "CONDITION_EXPRESSION"],
+                "CONDITION_EXPRESSION": ["EXPRESSION_IDENTIFIER SPACE RELATIONAL_OPERATOR SPACE EXPRESSION_IDENTIFIER", 
+                                         "EXPRESSION_IDENTIFIER SPACE RELATIONAL_OPERATOR SPACE DIGIT"],
+                "OPTIONAL_NOT": ["LOGICAL_OPERATOR_PREFIX SPACE", "SPACE"], 
+
+                # Loops
+                "FOR_HEADER": ["FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL COMMA SPACE STEP BRACKET_CLOSE SPACE COLON", 
+                               "FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL BRACKET_CLOSE SPACE COLON"],
+                "INITIAL": ["DIGIT"],
+                "FINAL": ["STEP * EXECUTION_COUNT + INITIAL - 1"],
+                "STEP": ["1", "2", "3"],
+                "EXECUTION_COUNT": [ "2", "3"],
+                "FOR_LOOP": ["FOR_HEADER NEW_LINE TAB_INDENT DISPLAY"],
+                "ADVANCED_FOR_LOOP": ["FOR_LOOP",
+                                      "FOR_HEADER NEW_LINE TAB_INDENT ADVANCED_DISPLAY"],
+
+
+                # Displaying 
+                "DISPLAY" : ["PRINT BRACKET_OPEN DISPLAY_IDENTIFIER BRACKET_CLOSE"],
+                "ADVANCED_DISPLAY" : ["DISPLAY",
+                                      "PRINT BRACKET_OPEN DISPLAY_EXPRESSION BRACKET_CLOSE"],
+
+
+                "LEVEL1.1": ["IDENTIFIER_INITIALIZATION SIMPLE_ASSIGNMENTS ADVANCED_DISPLAY"],
+                "LEVEL1.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_DISPLAY"],
+                "LEVEL2.1": ["IDENTIFIER_INITIALIZATION SIMPLE_IF_STATEMENT TAB_INDENT DISPLAY", 
+                            "IDENTIFIER_INITIALIZATION SIMPLE_IF_STATEMENT TAB_INDENT DISPLAY NEW_LINE SIMPLE_ELIF_STATEMENT TAB_INDENT DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT DISPLAY", 
+                            "IDENTIFIER_INITIALIZATION SIMPLE_IF_STATEMENT TAB_INDENT DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT DISPLAY"],
+                "LEVEL2.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY", 
+                            "IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ADVANCED_ELIF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT ADVANCED_DISPLAY", 
+                            "IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT ADVANCED_DISPLAY"],
+                "LEVEL3.1": ["IDENTIFIER_INITIALIZATION FOR_LOOP"],
+                "LEVEL3.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_FOR_LOOP"],
+            
+                    }
+        
+
 
     def generate_code(self, symbol, assigned_identifiers, last_variable, parent=None):
         """
@@ -139,115 +245,6 @@ class CodeGenerator:
         end_time = time.time()
         print(f"Time taken: {end_time - start_time} seconds")
 
-# Context-free grammar rules    
-        
-cfg_rules = {
-    # Variables and digits
-    "VARIABLE": ["a", "b", "c", "d", "e",
-#                  "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-                ],
-    "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
-    
-    # Operators
-    "ARITHMETIC_OPERATOR": ["+", "-", "*", "/"],
-    "RELATIONAL_OPERATOR": ["<", ">", "<=", ">=", "!=", "=="],
-    "LOGICAL_OPERATOR_INFIX": ["and", "or"],
-    "LOGICAL_OPERATOR_PREFIX": ["not"],
-    "LOGICAL_OPERATOR": ["LOGICAL_OPERATOR_INFIX", "LOGICAL_OPERATOR_PREFIX"],
-    "OPERATOR": ["ARITHMETIC_OPERATOR"], 
- 
-    # Formatting
-    "NEW_LINE": ["\n"],
-    "TAB_INDENT": ["\t"],
-    "BRACKET_OPEN": ['('],
-    "BRACKET_CLOSE": [')'],
-    "EQUALS": ["="],
-    "COLON": [":"],
-    "COMMA": [","],
-
-    
-    # Keywords
-    "IF": ["if"],
-    "ELIF": ["elif"],
-    "ELSE": ["else"],
-    "FOR": ["for"],
-    "IN": ["in"],
-    "RANGE": ["range"],
-    "WHILE": ["while"],
-    "PRINT": ["print"],
-
-    # Terms and expressions
-    "TERM": ["EXPRESSION_IDENTIFIER", "DIGIT"],
-    "EXPRESSION": ["TERM SPACE OPERATOR SPACE TERM"],
-    "ENCLOSED_EXPRESSION": ["BRACKET_OPEN EXPRESSION BRACKET_CLOSE"],
-    "DISPLAY_EXPRESSION": ["EXPRESSION_IDENTIFIER SPACE OPERATOR SPACE EXPRESSION_IDENTIFIER" ,
-                            "EXPRESSION_IDENTIFIER SPACE OPERATOR SPACE DIGIT"],
-    
-    # Initializations and assignments
-    "IDENTIFIER_INITIALIZATION": ["IDENTIFIER_INITIALIZATION INITIALIZATION", 
-                                  "INITIALIZATION"],
-
-    "INITIALIZATION": ["VARIABLE SPACE EQUALS SPACE DIGIT NEW_LINE"],
-    
-    "SIMPLE_ASSIGNMENTS": ["VARIABLE SPACE EQUALS SPACE EXPRESSION NEW_LINE" , ""],
-    "ADVANCED_ASSIGNMENTS": ["VARIABLE SPACE EQUALS SPACE SIMPLE_ARITHMETIC_EVALUATION NEW_LINE", 
-                             "VARIABLE SPACE EQUALS SPACE EXPRESSION NEW_LINE" , 
-                             ""],
-    
-    "SIMPLE_ARITHMETIC_EVALUATION": ["SIMPLE_ARITHMETIC_EVALUATION ARITHMETIC_OPERATOR ENCLOSED_EXPRESSION", 
-                                     "ENCLOSED_EXPRESSION",
-                                    ], 
-
-    # Conditions
-    "SIMPLE_IF_STATEMENT": ["IF SPACE CONDITION SPACE COLON NEW_LINE"],
-    "ADVANCED_IF_STATEMENT": ["IF SPACE CHAIN_CONDITION SPACE COLON NEW_LINE"],
-    "SIMPLE_ELIF_STATEMENT": ["ELIF SPACE CONDITION SPACE COLON NEW_LINE"],
-    "ADVANCED_ELIF_STATEMENT": ["ELIF SPACE CHAIN_CONDITION SPACE COLON NEW_LINE"],
-    "ELSE_STATEMENT": ["ELSE SPACE COLON NEW_LINE"],
-    
-    "CHAIN_CONDITION": ["CHAIN_CONDITION SPACE LOGICAL_OPERATOR_INFIX SPACE ENCLOSED_CONDITION", 
-                        "LOGICAL_OPERATOR_PREFIX SPACE ENCLOSED_CONDITION", 
-                        "ENCLOSED_CONDITION"],
-    "ENCLOSED_CONDITION": ["BRACKET_OPEN CONDITION BRACKET_CLOSE"],
-    "CONDITION": ["OPTIONAL_NOT CONDITION_EXPRESSION", "CONDITION_EXPRESSION"],
-    "CONDITION_EXPRESSION": ["EXPRESSION_IDENTIFIER SPACE RELATIONAL_OPERATOR SPACE EXPRESSION_IDENTIFIER", 
-                             "EXPRESSION_IDENTIFIER SPACE RELATIONAL_OPERATOR SPACE DIGIT"],
-    "OPTIONAL_NOT": ["LOGICAL_OPERATOR_PREFIX SPACE", "SPACE"], 
-
-    # Loops
-    "FOR_HEADER": ["FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL COMMA SPACE STEP BRACKET_CLOSE SPACE COLON", 
-                   "FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL BRACKET_CLOSE SPACE COLON"],
-    "INITIAL": ["DIGIT"],
-    "FINAL": ["STEP * EXECUTION_COUNT + INITIAL - 1"],
-    "STEP": ["1", "2", "3"],
-    "EXECUTION_COUNT": [ "2", "3"],
-    "FOR_LOOP": ["FOR_HEADER NEW_LINE TAB_INDENT DISPLAY"],
-    "ADVANCED_FOR_LOOP": ["FOR_LOOP",
-                          "FOR_HEADER NEW_LINE TAB_INDENT ADVANCED_DISPLAY"],
-    
-    
-    # Displaying 
-    "DISPLAY" : ["PRINT BRACKET_OPEN DISPLAY_IDENTIFIER BRACKET_CLOSE"],
-    "ADVANCED_DISPLAY" : ["DISPLAY",
-                          "PRINT BRACKET_OPEN DISPLAY_EXPRESSION BRACKET_CLOSE"],
-
-    
-    "LEVEL1.1": ["IDENTIFIER_INITIALIZATION SIMPLE_ASSIGNMENTS ADVANCED_DISPLAY"],
-    "LEVEL1.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_DISPLAY"],
-    "LEVEL2.1": ["IDENTIFIER_INITIALIZATION SIMPLE_IF_STATEMENT TAB_INDENT DISPLAY", 
-                "IDENTIFIER_INITIALIZATION SIMPLE_IF_STATEMENT TAB_INDENT DISPLAY NEW_LINE SIMPLE_ELIF_STATEMENT TAB_INDENT DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT DISPLAY", 
-                "IDENTIFIER_INITIALIZATION SIMPLE_IF_STATEMENT TAB_INDENT DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT DISPLAY"],
-    "LEVEL2.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY", 
-                "IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ADVANCED_ELIF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT ADVANCED_DISPLAY", 
-                "IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT ADVANCED_DISPLAY"],
-    "LEVEL3.1": ["IDENTIFIER_INITIALIZATION FOR_LOOP"],
-    "LEVEL3.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_FOR_LOOP"],
-
- 
-}
-
-
-
 
 def main():
     parser = argparse.ArgumentParser(description='Generate and write programs based on a specified level. ')
@@ -258,7 +255,7 @@ def main():
     args = parser.parse_args()
 
     # Create CodeGenerator instance and generate programs
-    code_generator = CodeGenerator(cfg_rules)
+    code_generator = CodeGenerator()
     code_generator.generate_and_write_programs(num_programs=args.num_programs, level=args.level, filename=args.filename)
 
 if __name__ == "__main__":

@@ -214,7 +214,7 @@ class CodeGenerator:
 
         return root, program.replace("SPACE", " ")
 
-    def generate_and_write_programs(self, num_programs, level, filename='data.txt'):
+    def generate_and_write_programs(self, num_programs, level, filename='data.txt', deduplicate=True):
         """
         Generate and write a specified number of programs to a file.
 
@@ -222,11 +222,16 @@ class CodeGenerator:
         - num_programs (int): Number of programs to generate and write.
         - level (str): The level of the programs.
         - filename (str): Name of the file to write the programs (default is 'data.txt').
+        - deduplicate (bool, optional): Whether to perform deduplication of generated programs (default is True).
         """
-        start_time = time.time()  # Start time
+        start_time = time.time()  
 
         with open(filename, 'w') as file:
-            for _ in range(num_programs):
+            
+            generated_programs = 0
+            unique_code_set = set()
+
+            while generated_programs < num_programs:
                 try:
                     root, program = self.generate_program(level)
                     code = program + "\n# output"
@@ -238,25 +243,38 @@ class CodeGenerator:
 
                     output = '\n'.join([f'# {line}' if line else f'# ' for line in output.split('\n')])
                     result = f"""{code}\n{output}"""
-                    file.write(result + '\n\n')
+
+                    if deduplicate:
+                        if result not in unique_code_set:
+                            unique_code_set.add(result)
+                            file.write(result + '\n\n')
+                            generated_programs += 1  
+                    else:
+                        file.write(result + '\n\n')
+                        generated_programs += 1  
+
                 except Exception as e:
+                    
                     continue
 
         end_time = time.time()
-        print(f"Time taken: {end_time - start_time} seconds")
+        deduplication_info = "with deduplication" if deduplicate else "without deduplication"
+        print(f"Code generation completed in {end_time - start_time:.2f} seconds.")
+        print(f"Generated {generated_programs} {'unique ' if deduplicate else ''}programs {deduplication_info}.")
+        print(f"Programs are saved to {filename}.")
 
 
 def main():
     parser = argparse.ArgumentParser(description='Generate and write programs based on a specified level. ')
     parser.add_argument('--num_programs', type=int, default=1000, help='Number of programs to generate and write (default is 1000)')
     parser.add_argument('--level', required=True, help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2)')
-    parser.add_argument('--filename', default='data.txt', help='Name of the file to write the programs (default is data.txt)')
+    parser.add_argument('--filename', default='data/data.txt', help='Name of the file to write the programs (default is data/data.txt)')
+    parser.add_argument('--deduplicate', action='store_true', default=True, help='Perform deduplication of generated programs (default is True)')
 
     args = parser.parse_args()
 
-    # Create CodeGenerator instance and generate programs
     code_generator = CodeGenerator()
-    code_generator.generate_and_write_programs(num_programs=args.num_programs, level=args.level, filename=args.filename)
+    code_generator.generate_and_write_programs(num_programs=args.num_programs, level=args.level, filename=args.filename,  deduplicate=args.deduplicate)
 
 if __name__ == "__main__":
     main()

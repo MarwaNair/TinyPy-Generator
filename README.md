@@ -6,7 +6,7 @@
 To use the code generator with different configurations, you can specify command line arguments. Here's how to add command line arguments:
 
 1. **num_programs**: Number of programs to generate and write (default is 1000).
-2. **level**: The level of the programs. Choose from:
+2. **level (required)**: The level of the programs. Choose from:
    - "1.1" for Simple arithmetic.
    - "1.2" for Advanced arithmetic with enclosed expressions.
    - "2.1" for Simple If-elif-else statements.

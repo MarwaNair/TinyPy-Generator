@@ -4,6 +4,8 @@ from io import StringIO
 from contextlib import redirect_stdout
 import argparse  
 import time
+from tqdm.auto import tqdm
+import hashlib
 
 class CodeGenerator:
     def __init__(self):
@@ -19,10 +21,12 @@ class CodeGenerator:
         # Dictionary containing context-free grammar rules.
         self.cfg_rules = {
                 # Variables and digits
-                "VARIABLE": ["a", "b", "c", "d", "e",
+                "VARIABLE": ["a"
+#                              , "b", "c", "d", "e",
 #                                          "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
                             ],
-                "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+                         ],
 
                 # Operators
                 "ARITHMETIC_OPERATOR": ["+", "-", "*", "/"],
@@ -119,6 +123,8 @@ class CodeGenerator:
                 "LEVEL3.1": ["IDENTIFIER_INITIALIZATION FOR_LOOP"],
                 "LEVEL3.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_FOR_LOOP"],
             
+                "ALL": ["LEVEL1.1", "LEVEL1.2", "LEVEL2.1", "LEVEL2.2", "LEVEL3.1", "LEVEL3.2"],
+            
                     }
         
 
@@ -209,8 +215,13 @@ class CodeGenerator:
             self.max_init = 4
         else:
             self.max_init = 5
+            
+        if level == "ALL" :
+            level_passed = level
+        else :
+            level_passed = "LEVEL" + level
 
-        program = self.generate_code("LEVEL" + level, assigned, last_variable, root)
+        program = self.generate_code(level_passed, assigned, last_variable, root)
 
         return root, program.replace("SPACE", " ")
 
@@ -225,12 +236,16 @@ class CodeGenerator:
         - deduplicate (bool, optional): Whether to perform deduplication of generated programs (default is True).
         """
         start_time = time.time()  
-
+        max_tries = 1000
+        num_tries = 0
+        
         with open(filename, 'w') as file:
             
             generated_programs = 0
-            unique_code_set = set()
-
+#             unique_code_set = set()
+            hashes = set() 
+            pbar = tqdm(desc="Generation", total=num_programs)
+            
             while generated_programs < num_programs:
                 try:
                     root, program = self.generate_program(level)
@@ -243,20 +258,33 @@ class CodeGenerator:
 
                     output = '\n'.join([f'# {line}' if line else f'# ' for line in output.split('\n')])
                     result = f"""{code}\n{output}"""
+                    
+                    program_hash = hashlib.sha256(result.encode('utf-8')).hexdigest()
 
                     if deduplicate:
-                        if result not in unique_code_set:
-                            unique_code_set.add(result)
+#                         if result not in unique_code_set:
+#                             unique_code_set.add(result)
+                        if program_hash not in hashes:
+                            hashes.add(program_hash)
                             file.write(result + '\n\n')
                             generated_programs += 1  
+                            pbar.update(1)
+                            num_tries = 0
+                        else:
+                            num_tries += 1
+                            if num_tries >= max_tries:
+                                print("Hit max tries in deduplication, stopping generation.")
+                                break
                     else:
                         file.write(result + '\n\n')
+                        
                         generated_programs += 1  
+                        pbar.update(1)
 
                 except Exception as e:
-                    
                     continue
 
+        pbar.close()
         end_time = time.time()
         deduplication_info = "with deduplication" if deduplicate else "without deduplication"
         print(f"Code generation completed in {end_time - start_time:.2f} seconds.")
@@ -267,7 +295,7 @@ class CodeGenerator:
 def main():
     parser = argparse.ArgumentParser(description='Generate and write programs based on a specified level. ')
     parser.add_argument('--num_programs', type=int, default=1000, help='Number of programs to generate and write (default is 1000)')
-    parser.add_argument('--level', required=True, help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2)')
+    parser.add_argument('--level', default="ALL", help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2, ALL)')
     parser.add_argument('--filename', default='data/data.txt', help='Name of the file to write the programs (default is data/data.txt)')
     parser.add_argument('--deduplicate', action='store_true', default=True, help='Perform deduplication of generated programs (default is True)')
 

@@ -6,6 +6,9 @@ import argparse
 import time
 from tqdm.auto import tqdm
 import hashlib
+import os
+import psutil
+
 
 class CodeGenerator:
     def __init__(self):
@@ -13,7 +16,6 @@ class CodeGenerator:
         Initialize the CodeGenerator object with the given context-free grammar rules.
 
         """
-                
         
         self.init_count = 0
         self.max_init = 0
@@ -21,8 +23,7 @@ class CodeGenerator:
         # Dictionary containing context-free grammar rules.
         self.cfg_rules = {
                 # Variables and digits
-                "VARIABLE": ["a", "b", "c", "d", "e",
-#                                          "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+                "VARIABLE": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
                             ],
                 "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
                          ],
@@ -223,6 +224,11 @@ class CodeGenerator:
         program = self.generate_code(level_passed, assigned, last_variable, root)
 
         return root, program.replace("SPACE", " ")
+    
+    def memory_usage(self):
+        process = psutil.Process(os.getpid())
+        mem_info = process.memory_info()
+        return mem_info.rss
 
     def generate_and_write_programs(self, num_programs, level, filename='data.txt', deduplicate=True):
         """
@@ -235,13 +241,13 @@ class CodeGenerator:
         - deduplicate (bool, optional): Whether to perform deduplication of generated programs (default is True).
         """
         start_time = time.time()  
+        start_mem = self.memory_usage()
         max_tries = 1000
         num_tries = 0
         
         with open(filename, 'w') as file:
             
             generated_programs = 0
-#             unique_code_set = set()
             hashes = set() 
             pbar = tqdm(desc="Generation", total=num_programs)
             
@@ -261,8 +267,6 @@ class CodeGenerator:
                     program_hash = hashlib.sha256(result.encode('utf-8')).hexdigest()
 
                     if deduplicate:
-#                         if result not in unique_code_set:
-#                             unique_code_set.add(result)
                         if program_hash not in hashes:
                             hashes.add(program_hash)
                             file.write(result + '\n\n')
@@ -285,8 +289,10 @@ class CodeGenerator:
 
         pbar.close()
         end_time = time.time()
+        end_mem = self.memory_usage()
         deduplication_info = "with deduplication" if deduplicate else "without deduplication"
         print(f"Code generation completed in {end_time - start_time:.2f} seconds.")
+        print(f"Memory used during code generation: {end_mem - start_mem} bytes")
         print(f"Generated {generated_programs} {'unique ' if deduplicate else ''}programs {deduplication_info}.")
         print(f"Programs are saved to {filename}.")
 

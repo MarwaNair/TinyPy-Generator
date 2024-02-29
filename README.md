@@ -1,7 +1,7 @@
 # TinyPy Generator
 
 <p align="center">
-  <img src="https://github.com/MarwaNair/Simple-Python-CFG-Generator/assets/86785811/8f8f8cc2-4427-4828-b195-258c3b026f2d" width="300" >
+  <img src="https://github.com/MarwaNair/Simple-Python-CFG-Generator/assets/86785811/8f8f8cc2-4427-4828-b195-258c3b026f2d" width="250" >
 </p>
 
 

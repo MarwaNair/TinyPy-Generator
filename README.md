@@ -1,3 +1,8 @@
+# TinyPy Generator
+
+![Designer (6)](https://github.com/MarwaNair/Simple-Python-CFG-Generator/assets/86785811/8f8f8cc2-4427-4828-b195-258c3b026f2d)
+
+This repository contains the code associated with the presentation titled [“Automatic Generation of Python Programs Using Context-Free Grammars.”](https://jnamaral.github.io/LATHC24/program/) TinyPy Generator is a tool that generates code with different levels of complexity, ranging from code containing only assignments to more complex code containing conditionals and loops.
 
 ## How to Use
 

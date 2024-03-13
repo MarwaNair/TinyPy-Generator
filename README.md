@@ -7,6 +7,8 @@
 
 This repository contains the code associated with the presentation titled [“Automatic Generation of Python Programs Using Context-Free Grammars.”](https://jnamaral.github.io/LATHC24/program/) TinyPy Generator is a tool that generates code with different levels of complexity, ranging from code containing only assignments to more complex code containing conditionals and loops.
 
+
+Link to the paper: https://arxiv.org/abs/2403.06503
 ## How to Use
 
 ### Command Line Arguments

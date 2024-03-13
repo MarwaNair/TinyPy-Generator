@@ -38,4 +38,4 @@ python3 code_generator.py --num_programs 5000 --level 3.1 --filename output.txt 
 ```
 
 
-Feel free to modify and expand this template based on your specific requirements.
+Feel free to modify and expand based on your specific requirements.

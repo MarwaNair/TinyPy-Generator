@@ -23,10 +23,8 @@ class CodeGenerator:
         # Dictionary containing context-free grammar rules.
         self.cfg_rules = {
                 # Variables and digits
-                "VARIABLE": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
-                            ],
-                "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
-                         ],
+                "VARIABLE": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" ],
+                "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
 
                 # Operators
                 "ARITHMETIC_OPERATOR": ["+", "-", "*", "/"],
@@ -98,9 +96,6 @@ class CodeGenerator:
                 "FOR_HEADER": ["FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL COMMA SPACE STEP BRACKET_CLOSE SPACE COLON", 
                                "FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL BRACKET_CLOSE SPACE COLON"],
                 "INITIAL": ["DIGIT"],
-                "FINAL": ["STEP * EXECUTION_COUNT + INITIAL - 1"],
-                "STEP": ["1", "2", "3"],
-                "EXECUTION_COUNT": [ "2", "3"],
                 "FOR_LOOP": ["FOR_HEADER NEW_LINE TAB_INDENT DISPLAY"],
                 "ADVANCED_FOR_LOOP": ["FOR_LOOP",
                                       "FOR_HEADER NEW_LINE TAB_INDENT ADVANCED_DISPLAY"],
@@ -129,7 +124,7 @@ class CodeGenerator:
         
 
 
-    def generate_code(self, symbol, assigned_identifiers, last_variable, parent=None):
+    def generate_code(self, symbol, assigned_identifiers, last_variable, for_init_step, parent=None ):
         """
         Generate code recursively based on the context-free grammar rules.
 
@@ -154,10 +149,12 @@ class CodeGenerator:
             rule = random.choice(self.cfg_rules[symbol])
             symbols = rule.split(" ")
 
-            generated_symbols = [self.generate_code(s, assigned_identifiers, last_variable, node) for s in symbols]
+            generated_symbols = [self.generate_code(s, assigned_identifiers, last_variable, for_init_step, node) for s in symbols]
 
-            if symbol == "FINAL":
-                return str(eval(''.join(generated_symbols)))
+            if symbol == "INITIAL":
+                init = generated_symbols[0]
+                for_init_step["initial_value"] = init
+            
 
             if symbol == "INITIALIZATION":
                 assigned_identifiers.add(generated_symbols[0])
@@ -168,6 +165,24 @@ class CodeGenerator:
 
             return ''.join(generated_symbols)
 
+        elif symbol == "FINAL":
+            
+            initial_value = for_init_step.get("initial_value", "0")
+        
+            # Generate valid step_value and execution_count
+            valid_values = [(1, 2), (2, 1), (2, 2), (2, 3), (3, 2)]
+            step_value, execution_count = random.choice(valid_values)
+            for_init_step["step"] = str(step_value)
+            
+            final_value = step_value * execution_count + int(initial_value) - 1
+            return str(final_value)
+
+            
+                
+        elif symbol == "STEP":
+            
+            return for_init_step.get("step", "0")
+            
         elif symbol == "EXPRESSION_IDENTIFIER":
             identifier = random.choice(tuple(assigned_identifiers)) if assigned_identifiers else random.choice(self.cfg_rules["DIGIT"])
             return identifier
@@ -179,6 +194,8 @@ class CodeGenerator:
                 return f"{random.choice(tuple(assigned_identifiers))}"
         else:
             return symbol
+
+    
 
     def print_tree(self, root):
         """
@@ -202,13 +219,16 @@ class CodeGenerator:
         """
         assigned = set()
         last_variable = set()
+        for_init_step = {}
         root = Node("ROOT")
 
         self.init_count = 0
         if level == "1.1":
-            self.max_init = 1
+            self.max_init = 2
         elif level == "1.2":
             self.max_init = 3
+        elif level == "2.1":
+            self.max_init = 2
         elif level == "3.1":
             self.max_init = 2
         elif level == "3.2":
@@ -220,9 +240,9 @@ class CodeGenerator:
             level_passed = level
         else :
             level_passed = "LEVEL" + level
-
-        program = self.generate_code(level_passed, assigned, last_variable, root)
-
+            
+        program = self.generate_code(level_passed, assigned, last_variable, for_init_step, root)
+        
         return root, program.replace("SPACE", " ")
     
     def memory_usage(self):
@@ -250,7 +270,6 @@ class CodeGenerator:
             generated_programs = 0
             hashes = set() 
             pbar = tqdm(desc="Generation", total=num_programs)
-            
             while generated_programs < num_programs:
                 try:
                     root, program = self.generate_program(level)
@@ -299,10 +318,10 @@ class CodeGenerator:
 
 def main():
     parser = argparse.ArgumentParser(description='Generate and write programs based on a specified level. ')
-    parser.add_argument('--num_programs', type=int, default=1000, help='Number of programs to generate and write (default is 1000)')
-    parser.add_argument('--level', default="ALL", help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2, ALL)')
-    parser.add_argument('--filename', default='data/data.txt', help='Name of the file to write the programs (default is data/data.txt)')
-    parser.add_argument('--deduplicate', action='store_true', default=True, help='Perform deduplication of generated programs (default is True)')
+    parser.add_argument('--num_programs', type=int, default=3000000, help='Number of programs to generate and write (default is 1000)')
+    parser.add_argument('--level', default="3.1", help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2, ALL)')
+    parser.add_argument('--filename', default='3.1.txt', help='Name of the file to write the programs (default is data.txt)')
+    parser.add_argument('--deduplicate', action='store_true', default=True, help='Perform deduplication of generated programs (default is True)a')
 
     args = parser.parse_args()
 

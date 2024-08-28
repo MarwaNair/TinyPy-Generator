@@ -24,7 +24,7 @@ class CodeGenerator:
         self.cfg_rules = {
                 # Variables and digits
                 "VARIABLE": ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z" ],
-                "DIGIT": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+                "DIGIT": [str(i) for i in range(256)],
 
                 # Operators
                 "ARITHMETIC_OPERATOR": ["+", "-", "*", "/"],
@@ -96,11 +96,37 @@ class CodeGenerator:
                 "FOR_HEADER": ["FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL COMMA SPACE STEP BRACKET_CLOSE SPACE COLON", 
                                "FOR SPACE EXPRESSION_IDENTIFIER SPACE IN SPACE RANGE BRACKET_OPEN INITIAL COMMA SPACE FINAL BRACKET_CLOSE SPACE COLON"],
                 "INITIAL": ["DIGIT"],
+            
                 "FOR_LOOP": ["FOR_HEADER NEW_LINE TAB_INDENT DISPLAY"],
                 "ADVANCED_FOR_LOOP": ["FOR_LOOP",
                                       "FOR_HEADER NEW_LINE TAB_INDENT ADVANCED_DISPLAY"],
 
 
+                # While Loops
+
+                # Definitions for relational operators
+                "RELATIONAL_OPERATOR_LESS": [ "<", "<="],
+                "RELATIONAL_OPERATOR_GREATER": [">", ">="],
+
+                # Less than or equal conditions
+                "CONDITION_EXPRESSION_LESS": [
+                    "EXPRESSION_IDENTIFIER_WHILE SPACE RELATIONAL_OPERATOR_LESS SPACE FINAL_LESS"
+                ],
+                
+                # Greater than or equal conditions
+                "CONDITION_EXPRESSION_GREATER": [
+                    "EXPRESSION_IDENTIFIER_WHILE SPACE RELATIONAL_OPERATOR_GREATER SPACE FINAL_GREATER"
+                ],
+            
+                # While 
+                "WHILE_HEADER_LESS": ["WHILE SPACE CONDITION_EXPRESSION_LESS SPACE COLON NEW_LINE"],
+                "WHILE_LOOP_LESS": ["WHILE_HEADER_LESS TAB_INDENT DISPLAY NEW_LINE TAB_INDENT UPDATE_LESS"],
+                "UPDATE_LESS": ["WHILE_IDENTIFIER SPACE EQUALS SPACE WHILE_IDENTIFIER SPACE + SPACE STEP"],
+                
+                "WHILE_HEADER_GREATER": ["WHILE SPACE CONDITION_EXPRESSION_GREATER SPACE COLON NEW_LINE"],
+                "WHILE_LOOP_GREATER": ["WHILE_HEADER_GREATER TAB_INDENT DISPLAY NEW_LINE TAB_INDENT UPDATE_GREATER"],
+                "UPDATE_GREATER": ["WHILE_IDENTIFIER SPACE EQUALS SPACE WHILE_IDENTIFIER SPACE - SPACE STEP"],
+    
                 # Displaying 
                 "DISPLAY" : ["PRINT BRACKET_OPEN DISPLAY_IDENTIFIER BRACKET_CLOSE"],
                 "ADVANCED_DISPLAY" : ["DISPLAY",
@@ -117,11 +143,15 @@ class CodeGenerator:
                             "IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_IF_STATEMENT TAB_INDENT ADVANCED_DISPLAY NEW_LINE ELSE_STATEMENT TAB_INDENT ADVANCED_DISPLAY"],
                 "LEVEL3.1": ["IDENTIFIER_INITIALIZATION FOR_LOOP"],
                 "LEVEL3.2": ["IDENTIFIER_INITIALIZATION ADVANCED_ASSIGNMENTS ADVANCED_FOR_LOOP"],
+
+                "LEVEL4.1": ["IDENTIFIER_INITIALIZATION WHILE_LOOP_LESS", "IDENTIFIER_INITIALIZATION WHILE_LOOP_GREATER"],
             
-                "ALL": ["LEVEL1.1", "LEVEL1.2", "LEVEL2.1", "LEVEL2.2", "LEVEL3.1", "LEVEL3.2"],
+                "ALL": ["LEVEL1.1", "LEVEL1.2", "LEVEL2.1", "LEVEL2.2", "LEVEL3.1", "LEVEL3.2", "LEVEL4.1"],
+
             
                     }
         
+
 
 
     def generate_code(self, symbol, assigned_identifiers, last_variable, for_init_step, parent=None ):
@@ -130,7 +160,7 @@ class CodeGenerator:
 
         Parameters:
         - symbol (str): The symbol to generate code for.
-        - assigned_identifiers (set): Set of assigned identifiers.
+        - assigned_identifiers (dict): Dictionary of assigned identifiers and their values.
         - last_variable (set): Set of the last used variables.
         - parent (Node): Parent node in the syntax tree.
 
@@ -148,16 +178,19 @@ class CodeGenerator:
 
             rule = random.choice(self.cfg_rules[symbol])
             symbols = rule.split(" ")
-
+            
             generated_symbols = [self.generate_code(s, assigned_identifiers, last_variable, for_init_step, node) for s in symbols]
 
             if symbol == "INITIAL":
                 init = generated_symbols[0]
                 for_init_step["initial_value"] = init
-            
-
+                
+                
             if symbol == "INITIALIZATION":
-                assigned_identifiers.add(generated_symbols[0])
+                variable_name = generated_symbols[0]
+                variable_value = generated_symbols[4]  
+                assigned_identifiers[variable_name] = variable_value
+                # assigned_identifiers.add(generated_symbols[0])
 
             if (symbol == "SIMPLE_ASSIGNMENTS") or (symbol == "ADVANCED_ASSIGNMENTS"):
                 if generated_symbols[0]:
@@ -165,16 +198,31 @@ class CodeGenerator:
 
             return ''.join(generated_symbols)
 
-        elif symbol == "FINAL":
+
+        if symbol == "WHILE_IDENTIFIER":
+
+            return for_init_step.get("initial_var", "*")
+            
+        elif (symbol == "FINAL") or (symbol == "FINAL_LESS"):
             
             initial_value = for_init_step.get("initial_value", "0")
-        
             # Generate valid step_value and execution_count
             valid_values = [(1, 2), (2, 1), (2, 2), (2, 3), (3, 2)]
             step_value, execution_count = random.choice(valid_values)
             for_init_step["step"] = str(step_value)
             
             final_value = step_value * execution_count + int(initial_value) - 1
+            return str(final_value)
+
+        elif symbol == "FINAL_GREATER":
+
+            initial_value = for_init_step.get("initial_value", "0")
+            # Generate valid step_value and execution_count
+            valid_values = [(1, 2), (2, 1), (2, 2), (2, 3), (3, 2)]
+            step_value, execution_count = random.choice(valid_values)
+            for_init_step["step"] = str(step_value)
+            
+            final_value = int(initial_value) - step_value * execution_count + 1
             return str(final_value)
 
             
@@ -184,17 +232,24 @@ class CodeGenerator:
             return for_init_step.get("step", "0")
             
         elif symbol == "EXPRESSION_IDENTIFIER":
-            identifier = random.choice(tuple(assigned_identifiers)) if assigned_identifiers else random.choice(self.cfg_rules["DIGIT"])
+            identifier = random.choice(tuple(assigned_identifiers.keys())) if assigned_identifiers else random.choice(self.cfg_rules["DIGIT"])
             return identifier
 
+        if symbol == "EXPRESSION_IDENTIFIER_WHILE":
+            
+            initial_var = random.choice(tuple(assigned_identifiers.keys())) if assigned_identifiers else random.choice(self.cfg_rules["DIGIT"])
+            for_init_step["initial_var"] = initial_var
+            for_init_step["initial_value"] = assigned_identifiers[initial_var]
+            return initial_var
         elif symbol == "DISPLAY_IDENTIFIER":
             try:
                 return f"{tuple(last_variable)[0]}"
             except:
-                return f"{random.choice(tuple(assigned_identifiers))}"
+                return f"{random.choice(tuple(assigned_identifiers.keys()))}"
         else:
             return symbol
 
+    
     
 
     def print_tree(self, root):
@@ -217,7 +272,8 @@ class CodeGenerator:
         Returns:
         - Tuple[Node, str]: The syntax tree root node and the generated program.
         """
-        assigned = set()
+        # assigned = set()
+        assigned = {}
         last_variable = set()
         for_init_step = {}
         root = Node("ROOT")
@@ -233,6 +289,8 @@ class CodeGenerator:
             self.max_init = 2
         elif level == "3.2":
             self.max_init = 4
+        elif level == "4.1":
+            self.max_init = 2
         else:
             self.max_init = 5
             
@@ -302,7 +360,6 @@ class CodeGenerator:
                         
                         generated_programs += 1  
                         pbar.update(1)
-
                 except Exception as e:
                     continue
 
@@ -319,9 +376,9 @@ class CodeGenerator:
 def main():
     parser = argparse.ArgumentParser(description='Generate and write programs based on a specified level. ')
     parser.add_argument('--num_programs', type=int, default=1000, help='Number of programs to generate and write (default is 1000)')
-    parser.add_argument('--level', default="ALL", help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2, ALL)')
+    parser.add_argument('--level', default="ALL", help='The level of the programs (1.1, 1.2, 2.1, 2.2, 3.1, 3.2, 4.1, ALL)')
     parser.add_argument('--filename', default='data.txt', help='Name of the file to write the programs (default is data.txt)')
-    parser.add_argument('--deduplicate', action='store_true', default=True, help='Perform deduplication of generated programs (default is True)a')
+    parser.add_argument('--deduplicate', action='store_true', default=True, help='Perform deduplication of generated programs (default is True)')
 
     args = parser.parse_args()
 

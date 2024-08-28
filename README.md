@@ -23,6 +23,7 @@ To use the code generator with different configurations, you can specify command
    - "2.2" for Advanced If-elif-else statements with advanced arithmetic expressions.
    - "3.1" for Simple for loops.
    - "3.2" for Advanced for loops with advanced arithmetic expressions.
+   - "4.1" for Simple while loops.
    - “ALL” for all of the above levels.
 
 3. **filename**: Name of the file to write the programs (default is 'data/data.txt').
